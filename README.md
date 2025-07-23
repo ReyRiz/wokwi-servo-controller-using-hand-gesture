@@ -1,4 +1,4 @@
-# 🐱 NekoEyes - Gesture-Controlled IoT System
+# 🚀 ReyRiz - Gesture-Controlled IoT System
 
 A hand gesture recognition system that uses computer vision to control IoT devices via MQTT. When you move your thumb and index finger apart/together, it controls LED lights remotely!
 
@@ -17,8 +17,8 @@ A hand gesture recognition system that uses computer vision to control IoT devic
 2. **Distance Calculation**: Measures distance between thumb and index finger
 3. **MQTT Publishing**: Sends distance data to MQTT broker
 4. **LED Control**: ESP32 receives commands and controls LED
-   - Distance > 100px → LED ON 🟢
-   - Distance ≤ 100px → LED OFF 🔴
+    - Distance > 100px → LED ON 🟢
+    - Distance ≤ 100px → LED OFF 🔴
 
 ## 📋 Requirements
 
@@ -49,15 +49,15 @@ cd Gesture-Volume-Control
 pip install -r requirements.txt
 
 # Run the gesture controller
-python nekoeyes_gesture_controller.py
+python reyriz_gesture_controller.py
 ```
 
 ### 2. ESP32 Setup
 
-1. Open `nekoeyes_esp32_controller.ino` in Arduino IDE
+1. Open `reyriz_esp32_controller.ino` in Arduino IDE
 2. Install required libraries:
-   - WiFi
-   - PubSubClient
+    - WiFi
+    - PubSubClient
 3. Upload to ESP32
 4. Open Serial Monitor to see connection status
 
@@ -65,8 +65,8 @@ python nekoeyes_gesture_controller.py
 
 1. Go to [wokwi.com](https://wokwi.com)
 2. Create new ESP32 project
-3. Copy the code from `nekoeyes_esp32_controller.ino`
-4. Use the diagram from `nekoeyes_diagram.json`
+3. Copy the code from `reyriz_esp32_controller.ino`
+4. Use the diagram from `reyriz_diagram.json`
 5. Run simulation
 
 ## 📡 MQTT Configuration
@@ -75,28 +75,28 @@ python nekoeyes_gesture_controller.py
 **Port**: `1883`
 
 **Topics**:
-- `nekoeyes/finger_distance` - Publishes finger distance in pixels
-- `nekoeyes/led` - Publishes LED commands (ON/OFF)
+- `reyriz/finger_distance` - Publishes finger distance in pixels
+- `reyriz/led` - Publishes LED commands (ON/OFF)
 
 ## 🎮 Usage
 
 1. **Start the Python controller**:
-   ```bash
-   python nekoeyes_gesture_controller.py
-   ```
+    ```bash
+    python reyriz_gesture_controller.py
+    ```
 
 2. **Show your hand** to the camera with thumb and index finger visible
 
 3. **Control the LED**:
-   - 🤏 Bring fingers close together → LED OFF
-   - ✋ Spread fingers apart → LED ON
+    - 🤏 Bring fingers close together → LED OFF
+    - ✋ Spread fingers apart → LED ON
 
 4. **Exit**: Press 'q' to quit
 
 ## 📊 Output Example
 
 ```
-🎥 NekoEyes Gesture Controller Started!
+🎥 ReyRiz Gesture Controller Started!
 ✅ Connected to MQTT Broker (broker.mqttdashboard.com)!
 📡 [1] Distance: 45px → LED: OFF
 📡 [2] Distance: 120px → LED: ON
@@ -105,10 +105,10 @@ python nekoeyes_gesture_controller.py
 
 ## 🔗 Files Description
 
-- `nekoeyes_gesture_controller.py` - Main Python gesture controller
-- `nekoeyes_esp32_controller.ino` - ESP32 firmware code
-- `nekoeyes_diagram.json` - Wokwi circuit diagram
-- `nekoeyes_mqtt_test.py` - MQTT connection test script
+- `reyriz_gesture_controller.py` - Main Python gesture controller
+- `reyriz_esp32_controller.ino` - ESP32 firmware code
+- `reyriz_diagram.json` - Wokwi circuit diagram
+- `reyriz_mqtt_test.py` - MQTT connection test script
 - `wokwi.toml` - Wokwi project configuration
 
 ## 🛠️ Troubleshooting
@@ -131,7 +131,7 @@ python nekoeyes_gesture_controller.py
 
 Current LED control threshold: **100 pixels**
 
-To change the threshold, modify this line in `nekoeyes_gesture_controller.py`:
+To change the threshold, modify this line in `reyriz_gesture_controller.py`:
 ```python
 led_state = "ON" if distance > 100 else "OFF"  # Change 100 to your preferred value
 ```
@@ -156,4 +156,4 @@ The system can detect hand gestures in real-time and control IoT devices instant
 
 **Made with ❤️ for IoT enthusiasts and gesture control lovers!**
 
-*Happy coding! 🐱✨*
+*Happy coding! 🚀✨*
