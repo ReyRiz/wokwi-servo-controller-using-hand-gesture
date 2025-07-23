@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "author": "CHAITHRA A",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 23.2,
+      "left": 148.47,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 103.82,
+      "left": 182,
+      "attrs": { "value": "1000" }
+    },
+    { "type": "wokwi-servo", "id": "servo1", "top": -59.6, "left": 240, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "led1:C", "esp:GND.1", "green", [ "v0" ] ],
+    [ "led1:A", "r1:2", "green", [ "v1.76", "h74.7" ] ],
+    [ "r1:1", "esp:D2", "green", [ "v0" ] ],
+    [ "esp:D18", "servo1:PWM", "green", [ "h0" ] ],
+    [ "esp:GND.1", "servo1:GND", "black", [ "h0" ] ],
+    [ "esp:VIN", "servo1:V+", "red", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}
