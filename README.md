@@ -1,196 +1,159 @@
+# 🐱 NekoEyes - Gesture-Controlled IoT System
 
-<div align="center">
-  <h1>Gesture Volume Control Using OpenCV and MediaPipe</h1>
-  <img alt="output" src="images/output.gif" />
- </div>
+A hand gesture recognition system that uses computer vision to control IoT devices via MQTT. When you move your thumb and index finger apart/together, it controls LED lights remotely!
 
-> This Project uses OpenCV and MediaPipe to Control system volume 
+## ✨ Features
 
-## 💾 REQUIREMENTS
-+ opencv-python
-+ mediapipe
-+ comtypes
-+ numpy
-+ pycaw
+- 👋 **Hand Gesture Detection** using MediaPipe
+- 📏 **Finger Distance Measurement** between thumb and index finger
+- 🔗 **MQTT Communication** for IoT device control
+- 💡 **Smart LED Control** based on finger distance
+- 🎯 **Real-time Processing** with live camera feed
+- 🌐 **ESP32 Integration** for hardware control
+
+## 🚀 How It Works
+
+1. **Gesture Detection**: Camera captures hand gestures
+2. **Distance Calculation**: Measures distance between thumb and index finger
+3. **MQTT Publishing**: Sends distance data to MQTT broker
+4. **LED Control**: ESP32 receives commands and controls LED
+   - Distance > 100px → LED ON 🟢
+   - Distance ≤ 100px → LED OFF 🔴
+
+## 📋 Requirements
+
+### Python Dependencies
+```bash
+pip install opencv-python
+pip install mediapipe
+pip install paho-mqtt
+pip install numpy
+```
+
+### Hardware Components
+- ESP32 Development Board
+- LED (connected to pin 2)
+- Status LED (connected to pin 19)
+- Servo Motor (optional, connected to pin 18)
+- Resistors (220Ω for LEDs)
+
+## 🔧 Setup Instructions
+
+### 1. Python Gesture Controller
 
 ```bash
+# Clone or download the project
+cd Gesture-Volume-Control
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run the gesture controller
+python nekoeyes_gesture_controller.py
 ```
-***
-### MEDIAPIPE
-<div align="center">
-  <img alt="mediapipeLogo" src="images/mediapipe.png" />
-</div>
 
-> MediaPipe offers open source cross-platform, customizable ML solutions for live and streaming media.
+### 2. ESP32 Setup
 
-#### Hand Landmark Model
-After the palm detection over the whole image our subsequent hand landmark model performs precise keypoint localization of 21 3D hand-knuckle coordinates inside the detected hand regions via regression, that is direct coordinate prediction. The model learns a consistent internal hand pose representation and is robust even to partially visible hands and self-occlusions.
+1. Open `nekoeyes_esp32_controller.ino` in Arduino IDE
+2. Install required libraries:
+   - WiFi
+   - PubSubClient
+3. Upload to ESP32
+4. Open Serial Monitor to see connection status
 
-To obtain ground truth data, we have manually annotated ~30K real-world images with 21 3D coordinates, as shown below (we take Z-value from image depth map, if it exists per corresponding coordinate). To better cover the possible hand poses and provide additional supervision on the nature of hand geometry, we also render a high-quality synthetic hand model over various backgrounds and map it to the corresponding 3D coordinates.<br>
+### 3. Wokwi Simulation
 
-#### Solution APIs
-##### Configuration Options
-> Naming style and availability may differ slightly across platforms/languages.
+1. Go to [wokwi.com](https://wokwi.com)
+2. Create new ESP32 project
+3. Copy the code from `nekoeyes_esp32_controller.ino`
+4. Use the diagram from `nekoeyes_diagram.json`
+5. Run simulation
 
-+ <b>STATIC_IMAGE_MODE</b><br>
-If set to false, the solution treats the input images as a video stream. It will try to detect hands in the first input images, and upon a successful detection further localizes the hand landmarks. In subsequent images, once all max_num_hands hands are detected and the corresponding hand landmarks are localized, it simply tracks those landmarks without invoking another detection until it loses track of any of the hands. This reduces latency and is ideal for processing video frames. If set to true, hand detection runs on every input image, ideal for processing a batch of static, possibly unrelated, images. Default to false.
+## 📡 MQTT Configuration
 
-+ <b>MAX_NUM_HANDS</b><br>
-Maximum number of hands to detect. Default to 2.
+**Broker**: `broker.mqttdashboard.com`  
+**Port**: `1883`
 
-+ <b>MODEL_COMPLEXITY</b><br>
-Complexity of the hand landmark model: 0 or 1. Landmark accuracy as well as inference latency generally go up with the model complexity. Default to 1.
+**Topics**:
+- `nekoeyes/finger_distance` - Publishes finger distance in pixels
+- `nekoeyes/led` - Publishes LED commands (ON/OFF)
 
-+ <b>MIN_DETECTION_CONFIDENCE</b><br>
-Minimum confidence value ([0.0, 1.0]) from the hand detection model for the detection to be considered successful. Default to 0.5.
+## 🎮 Usage
 
-+ <b>MIN_TRACKING_CONFIDENCE:</b><br>
-Minimum confidence value ([0.0, 1.0]) from the landmark-tracking model for the hand landmarks to be considered tracked successfully, or otherwise hand detection will be invoked automatically on the next input image. Setting it to a higher value can increase robustness of the solution, at the expense of a higher latency. Ignored if static_image_mode is true, where hand detection simply runs on every image. Default to 0.5.
+1. **Start the Python controller**:
+   ```bash
+   python nekoeyes_gesture_controller.py
+   ```
 
-<br>
+2. **Show your hand** to the camera with thumb and index finger visible
 
-Source: [MediaPipe Hands Solutions](https://google.github.io/mediapipe/solutions/hands#python-solution-api)
+3. **Control the LED**:
+   - 🤏 Bring fingers close together → LED OFF
+   - ✋ Spread fingers apart → LED ON
 
-<div align="center">
-    <img alt="mediapipeLogo" src="images/hand_landmarks_docs.png" height="200 x    " />
-    <img alt="mediapipeLogo" src="images/htm.jpg" height="360 x" weight ="640 x" />
-    
-</div>
+4. **Exit**: Press 'q' to quit
 
-
-## 📝 CODE EXPLANATION
-<b>Importing Libraries</b>
-```py
-import cv2
-import mediapipe as mp
-import math
-import numpy as np
-from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-```
-***
-Solution APIs 
-```py
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-mp_hands = mp.solutions.hands
-```
-***
-
-Volume Control Library Usage 
-```py
-devices = AudioUtilities.GetSpeakers()
-interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-volume = cast(interface, POINTER(IAudioEndpointVolume))
-```
-***
-Getting Volume Range using `volume.GetVolumeRange()` Method
-```py
-volRange = volume.GetVolumeRange()
-minVol , maxVol , volBar, volPer= volRange[0] , volRange[1], 400, 0
-```
-***
-Setting up webCam using OpenCV
-```py
-wCam, hCam = 640, 480
-cam = cv2.VideoCapture(0)
-cam.set(3,wCam)
-cam.set(4,hCam)
-```
-***
-Using MediaPipe Hand Landmark Model for identifying Hands 
-```py
-with mp_hands.Hands(
-    model_complexity=0,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5) as hands:
-
-  while cam.isOpened():
-    success, image = cam.read()
-
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = hands.process(image)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    if results.multi_hand_landmarks:
-      for hand_landmarks in results.multi_hand_landmarks:
-        mp_drawing.draw_landmarks(
-            image,
-            hand_landmarks,
-            mp_hands.HAND_CONNECTIONS,
-            mp_drawing_styles.get_default_hand_landmarks_style(),
-            mp_drawing_styles.get_default_hand_connections_style()
-            )
-```
-***
-Using multi_hand_landmarks method for Finding postion of Hand landmarks
-```py
-lmList = []
-    if results.multi_hand_landmarks:
-      myHand = results.multi_hand_landmarks[0]
-      for id, lm in enumerate(myHand.landmark):
-        h, w, c = image.shape
-        cx, cy = int(lm.x * w), int(lm.y * h)
-        lmList.append([id, cx, cy])    
-```
-***
-Assigning variables for Thumb and Index finger position
-```py
-if len(lmList) != 0:
-      x1, y1 = lmList[4][1], lmList[4][2]
-      x2, y2 = lmList[8][1], lmList[8][2]
-```
-***
-Marking Thumb and Index finger using `cv2.circle()` and Drawing a line between them using `cv2.line()`
-```py
-cv2.circle(image, (x1,y1),15,(255,255,255))  
-cv2.circle(image, (x2,y2),15,(255,255,255))  
-cv2.line(image,(x1,y1),(x2,y2),(0,255,0),3)
-length = math.hypot(x2-x1,y2-y1)
-if length < 50:
-    cv2.line(image,(x1,y1),(x2,y2),(0,0,255),3)
-```
-***
-Converting Length range into Volume range using `numpy.interp()`
-```py
-vol = np.interp(length, [50, 220], [minVol, maxVol])
-```
-***
-Changing System Volume using `volume.SetMasterVolumeLevel()` method
-```py
-volume.SetMasterVolumeLevel(vol, None)
-volBar = np.interp(length, [50, 220], [400, 150])
-volPer = np.interp(length, [50, 220], [0, 100])
-```
-***
-Drawing Volume Bar using `cv2.rectangle()` method
-```py
-cv2.rectangle(image, (50, 150), (85, 400), (0, 0, 0), 3)
-cv2.rectangle(image, (50, int(volBar)), (85, 400), (0, 0, 0), cv2.FILLED)
-cv2.putText(image, f'{int(volPer)} %', (40, 450), cv2.FONT_HERSHEY_COMPLEX,
-        1, (0, 0, 0), 3)}
+## 📊 Output Example
 
 ```
-***
-Displaying Output using `cv2.imshow` method
-```py
-cv2.imshow('handDetector', image) 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-      break
+🎥 NekoEyes Gesture Controller Started!
+✅ Connected to MQTT Broker (broker.mqttdashboard.com)!
+📡 [1] Distance: 45px → LED: OFF
+📡 [2] Distance: 120px → LED: ON
+📡 [3] Distance: 80px → LED: OFF
 ```
-***
-Closing webCam
-```py
-cam.release()
+
+## 🔗 Files Description
+
+- `nekoeyes_gesture_controller.py` - Main Python gesture controller
+- `nekoeyes_esp32_controller.ino` - ESP32 firmware code
+- `nekoeyes_diagram.json` - Wokwi circuit diagram
+- `nekoeyes_mqtt_test.py` - MQTT connection test script
+- `wokwi.toml` - Wokwi project configuration
+
+## 🛠️ Troubleshooting
+
+### Python Issues
+- **Camera not found**: Check if camera is connected and not used by other apps
+- **MQTT connection failed**: Verify internet connection and broker address
+- **Import errors**: Ensure all dependencies are installed
+
+### ESP32 Issues
+- **WiFi connection failed**: Check WiFi credentials in code
+- **MQTT not connecting**: Verify broker address and port
+- **LED not working**: Check wiring and pin connections
+
+### Wokwi Issues
+- **Simulation not loading**: Use browser version instead of VS Code extension
+- **Library not found**: Try using built-in WiFi and PubSubClient libraries
+
+## 🎯 Threshold Settings
+
+Current LED control threshold: **100 pixels**
+
+To change the threshold, modify this line in `nekoeyes_gesture_controller.py`:
+```python
+led_state = "ON" if distance > 100 else "OFF"  # Change 100 to your preferred value
 ```
-***
 
-<div align = "center">
-<h2>📬 Contact</h2>
+## 🌟 Demo
 
-If you want to contact me, you can reach me through below handles.
+The system can detect hand gestures in real-time and control IoT devices instantly. Perfect for:
+- 🏠 Smart home automation
+- 🎮 Gesture-based games
+- 🤖 Robotics projects
+- 📚 Educational IoT demonstrations
 
-<a href="https://twitter.com/prrthamm"><img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c8/Twitter_Bird.svg/1200px-Twitter_Bird.svg.png" width="25">@prrthamm</img></a>&nbsp;&nbsp; <a href="https://www.linkedin.com/in/pratham-bhatnagar/"><img src="https://www.felberpr.com/wp-content/uploads/linkedin-logo.png" width="25"> Pratham Bhatnagar</img></a>
+## 📈 Future Enhancements
 
-</div>
+- 🎯 Multiple gesture recognition
+- 📱 Mobile app integration
+- 🔊 Voice control combination
+- 🎨 Custom LED patterns
+- 📊 Data logging and analytics
+
+---
+
+**Made with ❤️ for IoT enthusiasts and gesture control lovers!**
+
+*Happy coding! 🐱✨*
